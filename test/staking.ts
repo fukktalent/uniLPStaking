@@ -1,8 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-import { IUniswapV2Factory, IUniswapV2Router02 } from "../typechain-types/interfaces";
-import { ERC20Token, ERC20Token__factory, IUniswapV2Pair, Staking__factory, Staking } from "../typechain-types";
+import { ERC20Token, IUniswapV2Pair, Staking, IUniswapV2Factory, IUniswapV2Router02 } from "../typechain-types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumberish } from "ethers";
 
@@ -38,11 +37,12 @@ describe("Staking", function () {
         [owner, user] = await ethers.getSigners();
 
         // create and mint two erc20 tokens
-        tokenOne = await new ERC20Token__factory(owner).deploy("Token one", "TONE");
+        const erc20Factory = await ethers.getContractFactory("ERC20Token", owner);
+        tokenOne = <ERC20Token>(await erc20Factory.deploy("Token one", "TONE"));
         await tokenOne.deployed();
         tokenOne.connect(owner).mint(owner.address, 1_000_000_000);
 
-        tokenTwo = await new ERC20Token__factory(owner).deploy("Token two", "TTWO");
+        tokenTwo = <ERC20Token>(await erc20Factory.deploy("Token two", "TTWO"));
         await tokenTwo.deployed();
         tokenTwo.mint(owner.address, 1_000_000_000);
 
@@ -79,7 +79,8 @@ describe("Staking", function () {
     });
 
     it("Should deploy contract", async function () {
-        staking = await new Staking__factory(owner).deploy(pair.address, tokenOne.address);
+        const stakingFactory = await ethers.getContractFactory("Staking", owner);
+        staking = <Staking>(await stakingFactory.deploy(pair.address, tokenOne.address));
         await staking.deployed();
 
         expect(await staking.owner()).to.be.equal(owner.address);
@@ -171,17 +172,6 @@ describe("Staking", function () {
             const stakeData = await staking.getStakeData();
             expect(stakeData.lpAmount).to.be.equal(STAKE_AMOUNT);
             expect(stakeData.rewardAmount).to.be.equal(0);
-        });
-
-        it("Should reverted with not enough allowed", async function () {
-            const tx = staking.stake(STAKE_AMOUNT);
-            await expect(tx).to.be.revertedWith("not enough allowed");
-        });
-
-        it("Should reverted with not enough balance", async function () {
-            const balance = await pair.balanceOf(owner.address);
-            const tx = staking.stake(balance.add(1));
-            await expect(tx).to.be.revertedWith("not enough balance");
         });
     });
 

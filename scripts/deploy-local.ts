@@ -1,10 +1,5 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// When running the script with `npx hardhat run <script>` you'll find the Hardhat
-// Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
-import { ERC20Token__factory, IUniswapV2Factory, IUniswapV2Pair, IUniswapV2Router02, Staking__factory } from "../typechain-types";
+import { IUniswapV2Factory, IUniswapV2Pair, IUniswapV2Router02, Staking__factory } from "../typechain-types";
 
 async function main() {
     const [owner] = await ethers.getSigners();
@@ -13,11 +8,12 @@ async function main() {
     const factory: IUniswapV2Factory = <IUniswapV2Factory>(await ethers.getContractAt("IUniswapV2Factory", process.env.FACTORY_ADDRESS as string));
 
     // create tokens
-    const tokenOne = await new ERC20Token__factory(owner).deploy("one", "ONE");
+    const erc20Factory = await ethers.getContractFactory("ERC20Token", owner);
+    const tokenOne = await erc20Factory.deploy("one", "ONE");
     await tokenOne.deployed();
     await tokenOne.mint(owner.address, 1_000_000_000);
 
-    const tokenTwo = await new ERC20Token__factory(owner).deploy("two", "TWO");
+    const tokenTwo = await erc20Factory.deploy("two", "TWO");
     await tokenTwo.deployed();
     await tokenTwo.mint(owner.address, 1_000_000_000);
 
@@ -41,7 +37,8 @@ async function main() {
     const pairAddress = await factory.getPair(tokenOne.address, tokenTwo.address);
     const pair = <IUniswapV2Pair> await ethers.getContractAt("IUniswapV2Pair", pairAddress);
 
-    const staking = await new Staking__factory(owner).deploy(pairAddress, tokenOne.address);
+    const stakingFactory = await ethers.getContractFactory("Staking", owner);
+    const staking = await stakingFactory.deploy(pairAddress, tokenOne.address);
     await staking.deployed();
 
     await tokenOne.mint(staking.address, 1_000_000_000);

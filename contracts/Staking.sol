@@ -1,7 +1,6 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "./interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IERC20.sol";
 
 /// @title staking contract for stake uniswap v2 lp tokens
@@ -13,7 +12,7 @@ contract Staking {
         uint256 startTime;
     }
 
-    IUniswapV2Pair tokenPair;
+    IERC20 tokenPair;
     IERC20 rewardToken;
 
     mapping(address => Stake) private _stakes;
@@ -33,29 +32,15 @@ contract Staking {
         _;
     }
 
-    constructor(IUniswapV2Pair tokenPair_, IERC20 rewardToken_) {
+    constructor(IERC20 tokenPair_, IERC20 rewardToken_) {
         owner = msg.sender;
         tokenPair = tokenPair_;
         rewardToken = rewardToken_;
     }
 
     function stake(uint256 amount) public {
-        require(
-            tokenPair.balanceOf(msg.sender) >= amount,
-            "not enough balance"
-        );
-        require(
-            tokenPair.allowance(msg.sender, address(this)) >= amount,
-            "not enough allowed"
-        );
-
-        if (_stakes[msg.sender].lpAmount > 0) {
-            _stakes[msg.sender].rewardAmount += _calcReward(msg.sender);
-            _stakes[msg.sender].lpAmount += amount;
-        } else {
-            _stakes[msg.sender].lpAmount = amount;
-        }
-
+        _stakes[msg.sender].rewardAmount += _calcReward(msg.sender);
+        _stakes[msg.sender].lpAmount += amount;
         _stakes[msg.sender].startTime = block.timestamp;
         tokenPair.transferFrom(msg.sender, address(this), amount);
 
@@ -99,20 +84,8 @@ contract Staking {
         rewardPercent = rewardPercent_;
     }
 
-    function getStakeData()
-        public
-        view
-        returns (
-            uint256 lpAmount,
-            uint256 rewardAmount,
-            uint256 startTime
-        )
-    {
-        return (
-            _stakes[msg.sender].lpAmount,
-            _stakes[msg.sender].rewardAmount,
-            _stakes[msg.sender].startTime
-        );
+    function getStakeData() public view returns (Stake memory) {
+        return _stakes[msg.sender];
     }
 
     function _calcReward(address addr) private view returns (uint256) {
