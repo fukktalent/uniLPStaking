@@ -12,7 +12,7 @@ task("approve", "approve tokens to address")
         const token = await ethers.getContractAt("ERC20Token", tokenaddress, signer);
         const tx = await token.approve(to, amount);
 
-        console.log('approved');
+        console.log("approved");
         console.log(tx);
     });
 
@@ -27,7 +27,7 @@ task("mint", "mint tokens to address")
         const token = await ethers.getContractAt("ERC20Token", tokenaddress, signer);
         const tx = await token.mint(to, amount);
 
-        console.log('minted');
+        console.log("minted");
         console.log(tx);
     });
 
@@ -53,7 +53,7 @@ task("stake", "stake tokens")
         const staking = await ethers.getContractAt("Staking", address, signer);
         const tx = await staking.stake(amount)
 
-        console.log('staked');
+        console.log("staked");
         console.log(tx)
     });
 
@@ -65,7 +65,7 @@ task("unstake", "unstake tokens")
         const staking = await ethers.getContractAt("Staking", address, signer);
         const tx = await staking.unstake();
 
-        console.log('unstaked');
+        console.log("unstaked");
         console.log(tx)  
     });
 
@@ -77,6 +77,6 @@ task("claim", "claim tokens")
         const staking = await ethers.getContractAt("Staking", address, signer);
         const tx = await staking.claim();
 
-        console.log('claimed');
+        console.log("claimed");
         console.log(tx)  
     });
